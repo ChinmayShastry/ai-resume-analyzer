@@ -43,15 +43,26 @@ with col1:
     file = st.file_uploader("Upload Resume (PDF)", type=["pdf"])
     jd = st.text_area("Paste Job Description")
 
+    # 🔑 NEW: API KEY INPUT (BYOK)
+    st.subheader("🔑 OpenAI API Key")
+    api_key = st.text_input(
+        "Enter your OpenAI API Key",
+        type="password",
+        placeholder="sk-..."
+    )
+
     analyze = st.button("🚀 Analyze Resume")
 
-    # RESET OPTION (GOOD UX)
     if st.button("🔄 Reset"):
         st.session_state.result = None
         st.rerun()
 
 # ================= ANALYSIS PIPELINE =================
 if analyze and file and jd:
+
+    if not api_key:
+        st.error("⚠️ Please enter your OpenAI API key")
+        st.stop()
 
     with st.spinner("🧠 AI is analyzing your resume..."):
 
@@ -65,14 +76,12 @@ if analyze and file and jd:
         similarity = compute_similarity(resume_text, jd)
         score = calculate_score(similarity)
 
-        feedback = get_feedback(resume_text, jd)
-        rewritten = rewrite_bullet_points(resume_text)
+        # 🔑 PASS API KEY TO FUNCTIONS
+        feedback = get_feedback(resume_text, jd, api_key)
+        rewritten = rewrite_bullet_points(resume_text, api_key)
 
-        # SAVE RESULT ONCE (IMPORTANT FIX)
         st.session_state.result = {
             "resume_text": resume_text,
-            "resume_skills": resume_skills,
-            "jd_skills": jd_skills,
             "gap": gap,
             "score": score,
             "feedback": feedback,
@@ -87,12 +96,12 @@ with col2:
     if data:
 
         st.markdown("### 📊 Resume Score")
-        st.metric(label="Match Score", value=f"{data['score']}%")
+        st.metric("Match Score", f"{data['score']}%")
 
         st.markdown("### 📈 Skill Match Overview")
 
         fig = px.bar(
-            x=["Matched Skills", "Missing Skills"],
+            x=["Matched", "Missing"],
             y=[len(data["gap"]["matched_skills"]), len(data["gap"]["missing_skills"])],
             color=["Matched", "Missing"],
             color_discrete_map={
@@ -108,20 +117,20 @@ with col2:
         c1, c2 = st.columns(2)
 
         with c1:
-            st.success("✅ Matched Skills")
+            st.success("Matched Skills")
             st.write(data["gap"]["matched_skills"])
 
         with c2:
-            st.error("❌ Missing Skills")
+            st.error("Missing Skills")
             st.write(data["gap"]["missing_skills"])
 
         st.markdown("### 💬 AI Feedback")
         st.info(data["feedback"])
 
         st.markdown("### ✍️ AI Improved Resume")
-        st.code(data["rewritten"], language="markdown")
+        st.code(data["rewritten"])
 
-        # ---------------- PDF DOWNLOAD ----------------
+        # ---------------- PDF ----------------
         st.markdown("### 📥 Download Report")
 
         pdf_buffer = generate_resume_pdf(
@@ -131,15 +140,11 @@ with col2:
         )
 
         st.download_button(
-            label="⬇️ Download Optimized Resume PDF",
-            data=pdf_buffer,
-            file_name="ai_optimized_resume.pdf",
-            mime="application/pdf"
+            "⬇️ Download PDF",
+            pdf_buffer,
+            "ai_resume.pdf",
+            "application/pdf"
         )
 
     else:
-        st.markdown("""
-        <div style='text-align:center; padding: 40px; color: gray;'>
-            Upload your resume and job description to get AI analysis
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("Upload resume + JD to get analysis")
