@@ -4,4 +4,3 @@ pdfplumber
 sentence-transformers
 scikit-learn
 openai
-python-dotenv
