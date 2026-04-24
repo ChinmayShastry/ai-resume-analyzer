@@ -1,24 +1,20 @@
-from dotenv import load_dotenv
-load_dotenv()
-
-
-
 from openai import OpenAI
-import os
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def get_client(api_key):
+    return OpenAI(api_key=api_key)
 
-def rewrite_bullet_points(resume_text: str):
+
+def rewrite_bullet_points(resume_text: str, api_key: str):
+
+    client = get_client(api_key)
+
     prompt = f"""
-You are an expert resume writer.
+Improve resume bullet points:
 
-Improve the following resume bullet points:
-- Make them strong, action-oriented
-- Add measurable impact where possible
-- Keep them ATS-friendly
-- Do NOT add fake experience
-
-Return in bullet format.
+- Make action oriented
+- Add impact
+- ATS friendly
+- No fake info
 
 Resume:
 {resume_text}
