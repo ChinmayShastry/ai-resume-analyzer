@@ -1,28 +1,28 @@
-from dotenv import load_dotenv
-load_dotenv()
-
-
-import os
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def get_client(api_key):
+    return OpenAI(api_key=api_key)
 
-def get_feedback(resume, jd):
+
+def get_feedback(resume, jd, api_key):
+
+    client = get_client(api_key)
+
     prompt = f"""
-    Analyze the resume against the job description.
+Analyze resume vs job description.
 
-    Resume:
-    {resume}
+Resume:
+{resume}
 
-    Job Description:
-    {jd}
+Job:
+{jd}
 
-    Provide:
-    - Strengths
-    - Weaknesses
-    - Missing skills
-    - Suggestions
-    """
+Give:
+- strengths
+- weaknesses
+- missing skills
+- suggestions
+"""
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
