@@ -1,4 +1,5 @@
 from openai import OpenAI
+from app.config import MODEL_NAME
 
 def get_client(api_key):
     return OpenAI(api_key=api_key)
@@ -25,7 +26,7 @@ Give:
 """
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=MODEL_NAME,
         messages=[{"role": "user", "content": prompt}]
     )
 
