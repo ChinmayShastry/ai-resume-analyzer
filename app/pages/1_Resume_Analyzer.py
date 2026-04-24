@@ -10,6 +10,10 @@ from services.llm import get_feedback
 from services.rewriter import rewrite_bullet_points
 from services.pdf_exporter import generate_resume_pdf
 
+
+st.write("🔥 PAGE LOADED SUCCESSFULLY")
+
+
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="Resume Analyzer",
