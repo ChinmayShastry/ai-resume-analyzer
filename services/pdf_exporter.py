@@ -1,72 +1,90 @@
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
 from io import BytesIO
 
 
 def generate_resume_pdf(original_resume: str, improved_resume: str, score: float):
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        leftMargin=50,
+        rightMargin=50,
+        topMargin=50,
+        bottomMargin=40
+    )
 
     styles = getSampleStyleSheet()
+
+    # ---------------- CUSTOM STYLES ----------------
+    title_style = ParagraphStyle(
+        name="TitleStyle",
+        parent=styles["Title"],
+        fontSize=18,
+        leading=22,
+        spaceAfter=10
+    )
+
+    section_style = ParagraphStyle(
+        name="SectionStyle",
+        parent=styles["Heading2"],
+        fontSize=13,
+        textColor=colors.black,
+        spaceBefore=12,
+        spaceAfter=6
+    )
+
+    body_style = ParagraphStyle(
+        name="BodyStyle",
+        parent=styles["Normal"],
+        fontSize=10.5,
+        leading=14
+    )
+
+    bullet_style = ParagraphStyle(
+        name="BulletStyle",
+        parent=styles["Normal"],
+        fontSize=10.5,
+        leftIndent=10,
+        leading=14
+    )
+
     elements = []
 
-    # ---------------- TITLE ----------------
-    elements.append(Paragraph("AI Optimized Resume Report", styles["Title"]))
+    # ---------------- HEADER ----------------
+    elements.append(Paragraph("AI Improved Resume", title_style))
+    elements.append(Paragraph(f"Match Score: {score:.2f}%", body_style))
     elements.append(Spacer(1, 12))
 
-    # ---------------- SCORE ----------------
-    elements.append(Paragraph(f"Resume Match Score: {score:.2f}%", styles["Normal"]))
-    elements.append(Spacer(1, 12))
+    # ---------------- IMPROVED RESUME ONLY ----------------
+    # (Cleaner output—no need to show original in final doc)
 
-    # ---------------- ORIGINAL RESUME ----------------
-    elements.append(Paragraph("Original Resume", styles["Heading2"]))
-    elements.append(Spacer(1, 8))
-
-    for line in original_resume.split("\n"):
+    for line in improved_resume.split("\n"):
         line = line.strip()
 
         if not line:
             elements.append(Spacer(1, 6))
             continue
 
-        # Bullet handling
-        if line.startswith("-"):
-            elements.append(Paragraph(f"• {line[1:].strip()}", styles["Normal"]))
-        else:
-            elements.append(Paragraph(line, styles["Normal"]))
-
-        elements.append(Spacer(1, 4))
-
-    elements.append(Spacer(1, 12))
-
-    # ---------------- IMPROVED RESUME ----------------
-    elements.append(Paragraph("AI Improved Resume", styles["Heading2"]))
-    elements.append(Spacer(1, 8))
-
-    for line in improved_resume.split("\n"):
-        line = line.strip()
-
-        if not line:
-            elements.append(Spacer(1, 8))
-            continue
-
-        # Section headers (ALL CAPS)
+        # SECTION HEADINGS (ALL CAPS)
         if line.isupper():
-            elements.append(Paragraph(line, styles["Heading2"]))
+            elements.append(Paragraph(line, section_style))
 
-        # Bullet points
+        # BULLET POINTS
         elif line.startswith("-"):
-            elements.append(Paragraph(f"• {line[1:].strip()}", styles["Normal"]))
+            elements.append(
+                Paragraph(f"• {line[1:].strip()}", bullet_style)
+            )
 
-        # Normal text
+        # NORMAL TEXT
         else:
-            elements.append(Paragraph(line, styles["Normal"]))
+            elements.append(Paragraph(line, body_style))
 
-        elements.append(Spacer(1, 6))
-
-    # ---------------- BUILD PDF ----------------
+    # ---------------- BUILD ----------------
     doc.build(elements)
 
     buffer.seek(0)
