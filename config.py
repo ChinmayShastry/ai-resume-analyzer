@@ -21,9 +21,9 @@ SCORING_WEIGHTS = {
 # =========================
 
 RESUME_MASTER_PROMPT = """
-You are an expert ATS resume reviewer and writer.
+You are an expert ATS resume writer.
 
-Analyze the resume against the job description.
+Analyze the resume and job description.
 
 Return your response in this EXACT format:
 
@@ -34,9 +34,17 @@ Return your response in this EXACT format:
 - Improvements
 
 ===REWRITE===
-Provide improved bullet points only.
-Use strong action verbs and measurable impact.
-Do NOT invent fake experience.
+Rewrite the FULL resume in a professional format.
+
+Requirements:
+- Maintain original sections (Education, Experience, Projects, Skills)
+- Improve all bullet points with strong action verbs
+- Add measurable impact where possible
+- Keep formatting clean and readable
+- Make it ATS-friendly
+- Do NOT invent fake experience or information
+
+Output a complete, structured resume with proper headings and bullet points.
 """
 
 RESUME_FEEDBACK_PROMPT = """
