@@ -10,6 +10,22 @@ from services.llm import get_full_analysis
 from services.pdf_exporter import generate_resume_pdf
 from utils.text_splitter import split_resume_sections
 
+
+@st.cache_data(max_entries=10)
+def cached_extract_text(file_bytes):
+    import io
+    return extract_text_from_pdf(io.BytesIO(file_bytes))
+
+
+@st.cache_data(max_entries=10)
+def cached_extract_skills(text):
+    return extract_skills(text)
+
+
+@st.cache_data(max_entries=10)
+def cached_similarity(resume, jd):
+    return compute_similarity(resume, jd)
+
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="AI Resume Analyzer",
@@ -64,31 +80,39 @@ if analyze and file and jd:
         st.error("Please enter API key")
         st.stop()
 
-    with st.spinner("🧠 AI is analyzing your resume..."):
+    try:
+        with st.spinner("🧠 AI is analyzing your resume..."):
 
-        resume_text = extract_text_from_pdf(file)
+            resume_text = cached_extract_text(file.getvalue())
 
-        resume_skills = extract_skills(resume_text)
-        jd_skills = extract_skills(jd)
+            if not resume_text.strip():
+                st.error("Could not extract text from PDF")
+                st.stop()
 
-        gap = compute_gap(resume_skills, jd_skills)
+            resume_skills = cached_extract_skills(resume_text)
+            jd_skills = cached_extract_skills(jd)
 
-        similarity = compute_similarity(resume_text, jd)
-        score = calculate_score(similarity, gap)
+            gap = compute_gap(resume_skills, jd_skills)
 
-        feedback, rewritten = get_full_analysis(resume_text, jd, api_key)    
+            similarity = cached_similarity(resume_text, jd)
+            score = calculate_score(similarity, gap)
 
-        # ✅ NEW: section splitting (FIXED POSITION)
-        sections = split_resume_sections(resume_text)
+            feedback, rewritten = get_full_analysis(resume_text, jd, api_key)
 
-        st.session_state.result = {
-            "resume_text": resume_text,
-            "gap": gap,
-            "score": score,
-            "feedback": feedback,
-            "rewritten": rewritten,
-            "sections": sections
-        }
+            sections = split_resume_sections(resume_text)
+
+            st.session_state.result = {
+                "resume_text": resume_text,
+                "gap": gap,
+                "score": score,
+                "feedback": feedback,
+                "rewritten": rewritten,
+                "sections": sections
+            }
+
+    except Exception as e:
+        st.error("Something went wrong during analysis")
+        st.error(str(e))
 
 # ---------------- OUTPUT ----------------
 data = st.session_state.result
