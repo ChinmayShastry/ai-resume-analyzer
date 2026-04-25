@@ -1,3 +1,22 @@
+SECTION_KEYWORDS = {
+    "education": ["education", "academic", "qualification"],
+    "experience": ["experience", "work", "employment", "internship"],
+    "projects": ["project", "projects"],
+    "skills": ["skills", "technologies", "tech stack"],
+}
+
+
+def detect_section(line: str):
+    line_lower = line.lower()
+
+    for section, keywords in SECTION_KEYWORDS.items():
+        for keyword in keywords:
+            if keyword in line_lower:
+                return section
+
+    return None
+
+
 def split_resume_sections(text: str):
     sections = {
         "education": "",
@@ -12,16 +31,11 @@ def split_resume_sections(text: str):
     lines = text.split("\n")
 
     for line in lines:
-        l = line.lower()
+        detected = detect_section(line)
 
-        if "education" in l:
-            current_section = "education"
-        elif "experience" in l or "work" in l:
-            current_section = "experience"
-        elif "project" in l:
-            current_section = "projects"
-        elif "skill" in l:
-            current_section = "skills"
+        if detected:
+            current_section = detected
+            continue
 
         sections[current_section] += line + "\n"
 
