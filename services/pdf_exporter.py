@@ -1,61 +1,73 @@
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-import io
+from io import BytesIO
+
 
 def generate_resume_pdf(original_resume: str, improved_resume: str, score: float):
 
-    buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=letter)
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
 
-    width, height = letter
-    y = height - 50
+    styles = getSampleStyleSheet()
+    elements = []
 
-    def new_page_if_needed():
-        nonlocal y
-        if y < 60:
-            pdf.showPage()
-            pdf.setFont("Helvetica", 10)
-            y = height - 50
+    # ---------------- TITLE ----------------
+    elements.append(Paragraph("AI Optimized Resume Report", styles["Title"]))
+    elements.append(Spacer(1, 12))
 
-    # Title
-    pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawString(50, y, "AI Optimized Resume Report")
-    y -= 40
+    # ---------------- SCORE ----------------
+    elements.append(Paragraph(f"Resume Match Score: {score:.2f}%", styles["Normal"]))
+    elements.append(Spacer(1, 12))
 
-    # Score
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(50, y, f"Resume Match Score: {score:.2f}%")
-    y -= 30
+    # ---------------- ORIGINAL RESUME ----------------
+    elements.append(Paragraph("Original Resume", styles["Heading2"]))
+    elements.append(Spacer(1, 8))
 
-    # Divider
-    pdf.line(50, y, 550, y)
-    y -= 30
-
-    # Original Resume Section
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(50, y, "Original Resume:")
-    y -= 20
-
-    pdf.setFont("Helvetica", 10)
     for line in original_resume.split("\n"):
-        new_page_if_needed()
-        pdf.drawString(50, y, line[:100])
-        y -= 15
+        line = line.strip()
 
-    y -= 20
+        if not line:
+            elements.append(Spacer(1, 6))
+            continue
 
-    # Improved Resume Section
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(50, y, "AI Improved Resume:")
-    y -= 20
+        # Bullet handling
+        if line.startswith("-"):
+            elements.append(Paragraph(f"• {line[1:].strip()}", styles["Normal"]))
+        else:
+            elements.append(Paragraph(line, styles["Normal"]))
 
-    pdf.setFont("Helvetica", 10)
+        elements.append(Spacer(1, 4))
+
+    elements.append(Spacer(1, 12))
+
+    # ---------------- IMPROVED RESUME ----------------
+    elements.append(Paragraph("AI Improved Resume", styles["Heading2"]))
+    elements.append(Spacer(1, 8))
+
     for line in improved_resume.split("\n"):
-        new_page_if_needed()
-        pdf.drawString(50, y, line[:100])
-        y -= 15
+        line = line.strip()
 
-    pdf.save()
+        if not line:
+            elements.append(Spacer(1, 8))
+            continue
+
+        # Section headers (ALL CAPS)
+        if line.isupper():
+            elements.append(Paragraph(line, styles["Heading2"]))
+
+        # Bullet points
+        elif line.startswith("-"):
+            elements.append(Paragraph(f"• {line[1:].strip()}", styles["Normal"]))
+
+        # Normal text
+        else:
+            elements.append(Paragraph(line, styles["Normal"]))
+
+        elements.append(Spacer(1, 6))
+
+    # ---------------- BUILD PDF ----------------
+    doc.build(elements)
+
     buffer.seek(0)
-
     return buffer
