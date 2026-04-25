@@ -1,7 +1,0 @@
-streamlit
-plotly
-pdfplumber
-sentence-transformers
-scikit-learn
-openai
-reportlab
