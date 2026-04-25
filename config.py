@@ -20,6 +20,25 @@ SCORING_WEIGHTS = {
 # PROMPTS
 # =========================
 
+RESUME_MASTER_PROMPT = """
+You are an expert ATS resume reviewer and writer.
+
+Analyze the resume against the job description.
+
+Return your response in this EXACT format:
+
+===FEEDBACK===
+- Strengths
+- Weaknesses
+- Missing skills
+- Improvements
+
+===REWRITE===
+Provide improved bullet points only.
+Use strong action verbs and measurable impact.
+Do NOT invent fake experience.
+"""
+
 RESUME_FEEDBACK_PROMPT = """
 You are an expert ATS resume reviewer.
 
@@ -51,5 +70,6 @@ Return improved bullet points only.
 COMMON_SKILLS = [
     "python", "java", "c++", "sql", "machine learning",
     "deep learning", "nlp", "tensorflow", "pytorch",
-    "react", "node", "fastapi", "streamlit"
+    "react", "node", "fastapi", "streamlit",
+    "aws", "docker", "kubernetes", "git", "linux"
 ]
