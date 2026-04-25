@@ -12,6 +12,13 @@ from services.llm import get_full_analysis
 from services.pdf_exporter import generate_resume_pdf
 from utils.text_splitter import split_resume_sections
 
+st.markdown("""
+<style>
+h1, h2, h3 {
+    font-family: 'Segoe UI', sans-serif;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ---------------- CACHING ----------------
 @st.cache_data(max_entries=10)
@@ -179,43 +186,85 @@ if data:
         st.write(data["gap"]["missing_skills"])
 
     # ---------------- MISSING SKILLS HIGHLIGHT ----------------
+    
     st.markdown("## 🔍 Missing Skills Highlight")
-
+    
     missing = data["gap"]["missing_skills"]
-
+    
     if missing:
-        st.warning(f"Consider adding these skills: {', '.join(missing)}")
-
-        highlighted_text = highlight_missing_skills(
-            data["resume_text"],
-            missing
+        st.warning(f"Consider adding: {', '.join(missing)}")
+    
+        # Show limited preview instead of full resume
+        preview = data["resume_text"][:1500]
+    
+        highlighted_text = highlight_missing_skills(preview, missing)
+    
+        st.markdown(
+            f"""
+    <div style="background-color:#fff5f5; padding:10px; border-radius:8px;">
+    {highlighted_text.replace("\n", "<br>")}
+    </div>
+    """,
+            unsafe_allow_html=True
         )
-
-        st.markdown(highlighted_text, unsafe_allow_html=True)
-
-        # ---------------- SUGGESTIONS ----------------
-        st.markdown("## 💡 Suggested Additions")
-
-        for skill in missing:
-            st.write(f"- Add experience or project involving **{skill}**")
-
-    else:
-        st.success("No missing skills detected 🎉")
 
     # ---------------- SECTIONS ----------------
     st.markdown("## 📂 Resume Sections")
 
     for section, content in data["sections"].items():
         st.subheader(section.capitalize())
-        st.write(content.strip())
+        st.markdown(
+            f"""
+        <div style="
+            background-color:#fafafa;
+            padding:12px;
+            border-radius:8px;
+            border:1px solid #eee;
+            margin-bottom:10px;
+        ">
+        {content.strip().replace("\n", "<br>")}
+        </div>
+        """,
+            unsafe_allow_html=True
+        )
 
     # ---------------- FEEDBACK ----------------
+
     st.markdown("## 💬 AI Feedback")
-    st.info(data["feedback"])
+    
+    st.markdown(
+        f"""
+    <div style="
+        background-color:#eef6ff;
+        padding:15px;
+        border-radius:10px;
+        border:1px solid #cce0ff;
+    ">
+    {data["feedback"].replace("\n", "<br>")}
+    </div>
+    """,
+        unsafe_allow_html=True
+    )
+
 
     # ---------------- REWRITE ----------------
     st.markdown("## ✍️ Improved Resume")
-    st.code(data["rewritten"])
+    
+    st.markdown(
+        f"""
+    <div style="
+        background-color:#ffffff;
+        padding:20px;
+        border-radius:10px;
+        border:1px solid #ddd;
+        font-family: 'Segoe UI', sans-serif;
+        line-height:1.6;
+    ">
+    {data["rewritten"].replace("\n", "<br>")}
+    </div>
+    """,
+        unsafe_allow_html=True
+    )
 
     # ---------------- DOWNLOAD ----------------
     st.markdown("## 📥 Download")
