@@ -75,7 +75,7 @@ if analyze and file and jd:
         gap = compute_gap(resume_skills, jd_skills)
 
         similarity = compute_similarity(resume_text, jd)
-        score = calculate_score(similarity)
+        score = calculate_score(similarity, gap)
 
         feedback = get_feedback(resume_text, jd, api_key)
         rewritten = rewrite_bullet_points(resume_text, api_key)
