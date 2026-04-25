@@ -1,5 +1,7 @@
 import streamlit as st
 import plotly.express as px
+import pandas as pd
+import re
 
 from services.parser import extract_text_from_pdf
 from services.skills import extract_skills
@@ -11,6 +13,7 @@ from services.pdf_exporter import generate_resume_pdf
 from utils.text_splitter import split_resume_sections
 
 
+# ---------------- CACHING ----------------
 @st.cache_data(max_entries=10)
 def cached_extract_text(file_bytes):
     import io
@@ -25,6 +28,21 @@ def cached_extract_skills(text):
 @st.cache_data(max_entries=10)
 def cached_similarity(resume, jd):
     return compute_similarity(resume, jd)
+
+
+# ---------------- HIGHLIGHT FUNCTION ----------------
+def highlight_missing_skills(text, missing_skills):
+    highlighted = text
+
+    for skill in missing_skills:
+        pattern = re.compile(rf"\b{re.escape(skill)}\b", re.IGNORECASE)
+        highlighted = pattern.sub(
+            f"<span style='background-color:#ffcccc; padding:2px'>{skill}</span>",
+            highlighted
+        )
+
+    return highlighted
+
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -95,7 +113,7 @@ if analyze and file and jd:
             gap = compute_gap(resume_skills, jd_skills)
 
             similarity = cached_similarity(resume_text, jd)
-            score = calculate_score(similarity, gap)
+            score, components = calculate_score(similarity, gap)
 
             feedback, rewritten = get_full_analysis(resume_text, jd, api_key)
 
@@ -105,6 +123,7 @@ if analyze and file and jd:
                 "resume_text": resume_text,
                 "gap": gap,
                 "score": score,
+                "components": components,
                 "feedback": feedback,
                 "rewritten": rewritten,
                 "sections": sections
@@ -127,6 +146,26 @@ if data:
     col2.metric("Matched Skills", len(data["gap"]["matched_skills"]))
     col3.metric("Missing Skills", len(data["gap"]["missing_skills"]))
 
+    # ---------------- SCORE BREAKDOWN ----------------
+    st.markdown("## 📊 Score Breakdown")
+
+    comp = data["components"]
+
+    df = pd.DataFrame({
+        "Component": ["Skills", "Similarity", "Format"],
+        "Score": [
+            comp["skills"] * 100,
+            comp["similarity"] * 100,
+            comp["format"] * 100
+        ]
+    })
+
+    fig = px.bar(df, x="Component", y="Score", title="Score Contribution")
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.caption("Score is calculated based on skills match, semantic similarity, and resume structure.")
+
+    # ---------------- SKILL ANALYSIS ----------------
     st.markdown("## 🧠 Skill Analysis")
 
     c1, c2 = st.columns(2)
@@ -139,18 +178,46 @@ if data:
         st.error("Missing Skills")
         st.write(data["gap"]["missing_skills"])
 
-    # ---------------- NEW FEATURE ----------------
+    # ---------------- MISSING SKILLS HIGHLIGHT ----------------
+    st.markdown("## 🔍 Missing Skills Highlight")
+
+    missing = data["gap"]["missing_skills"]
+
+    if missing:
+        st.warning(f"Consider adding these skills: {', '.join(missing)}")
+
+        highlighted_text = highlight_missing_skills(
+            data["resume_text"],
+            missing
+        )
+
+        st.markdown(highlighted_text, unsafe_allow_html=True)
+
+        # ---------------- SUGGESTIONS ----------------
+        st.markdown("## 💡 Suggested Additions")
+
+        for skill in missing:
+            st.write(f"- Add experience or project involving **{skill}**")
+
+    else:
+        st.success("No missing skills detected 🎉")
+
+    # ---------------- SECTIONS ----------------
     st.markdown("## 📂 Resume Sections")
+
     for section, content in data["sections"].items():
         st.subheader(section.capitalize())
-        st.text(content.strip())
+        st.write(content.strip())
 
+    # ---------------- FEEDBACK ----------------
     st.markdown("## 💬 AI Feedback")
     st.info(data["feedback"])
 
+    # ---------------- REWRITE ----------------
     st.markdown("## ✍️ Improved Resume")
     st.code(data["rewritten"])
 
+    # ---------------- DOWNLOAD ----------------
     st.markdown("## 📥 Download")
 
     pdf_buffer = generate_resume_pdf(
