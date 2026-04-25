@@ -66,6 +66,8 @@ Displays score breakdown using Plotly charts
 
 ## 🏗️ Project Structure
 
+
+```
 ai-resume-analyzer/
 │
 ├── app.py                 # Streamlit UI
@@ -83,6 +85,7 @@ ai-resume-analyzer/
 │
 ├── utils/
 │   └── text_splitter.py   # Resume section detection
+```
 
 ## ⚙️ Installation
 
