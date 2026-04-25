@@ -6,8 +6,7 @@ from services.skills import extract_skills
 from services.gap_analysis import compute_gap
 from services.embeddings import compute_similarity
 from services.scorer import calculate_score
-from services.llm import get_feedback
-from services.rewriter import rewrite_bullet_points
+from services.llm import get_full_analysis
 from services.pdf_exporter import generate_resume_pdf
 from utils.text_splitter import split_resume_sections
 
@@ -77,8 +76,7 @@ if analyze and file and jd:
         similarity = compute_similarity(resume_text, jd)
         score = calculate_score(similarity, gap)
 
-        feedback = get_feedback(resume_text, jd, api_key)
-        rewritten = rewrite_bullet_points(resume_text, api_key)
+        feedback, rewritten = get_full_analysis(resume_text, jd, api_key)    
 
         # ✅ NEW: section splitting (FIXED POSITION)
         sections = split_resume_sections(resume_text)
