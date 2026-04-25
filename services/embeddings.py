@@ -1,9 +1,12 @@
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
-
-model = SentenceTransformer('all-MiniLM-L6-v2')
-
 def compute_similarity(resume_text, jd_text):
-    embeddings = model.encode([resume_text, jd_text])
-    score = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
-    return float(score)
+    resume_chunks = split_into_chunks(resume_text)
+
+    jd_embedding = model.encode([jd_text])[0]
+
+    scores = []
+    for chunk in resume_chunks:
+        emb = model.encode([chunk])[0]
+        score = cosine_similarity([emb], [jd_embedding])[0][0]
+        scores.append(score)
+
+    return max(scores)
