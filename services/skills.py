@@ -1,14 +1,15 @@
-from config import COMMON_SKILLS
+import re
 
+def normalize(text):
+    return re.sub(r'[^a-z0-9 ]', ' ', text.lower())
 
-def extract_skills(text: str):
-
-    text_lower = text.lower()
-
-    found_skills = []
+def extract_skills(text):
+    text = normalize(text)
+    found = []
 
     for skill in COMMON_SKILLS:
-        if skill in text_lower:
-            found_skills.append(skill)
+        pattern = r'\b' + re.escape(skill) + r'\b'
+        if re.search(pattern, text):
+            found.append(skill)
 
-    return list(set(found_skills))
+    return list(set(found))
