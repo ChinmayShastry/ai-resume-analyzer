@@ -117,7 +117,9 @@ if data:
 
     # ---------------- NEW FEATURE ----------------
     st.markdown("## 📂 Resume Sections")
-    st.json(data["sections"])
+    for section, content in data["sections"].items():
+        st.subheader(section.capitalize())
+        st.text(content.strip())
 
     st.markdown("## 💬 AI Feedback")
     st.info(data["feedback"])
